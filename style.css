@@ -111,7 +111,7 @@ body {
     box-shadow: 0 8px 20px rgba(76, 175, 80, 0.35);
 }
 
-.ingredients-box {
+.ingredient-box {
     background: #E8F5E9;
     border-radius: 20px;
     padding: 20px;
@@ -130,7 +130,7 @@ body {
     transition: background-color 0.15s ease;
 }
 
-#ingredientsSuggestions .list-group-item:hover {
+#ingredientSuggestions .list-group-item:hover {
     background-color: var(--green-light);
 }
 
@@ -155,7 +155,7 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(76,175, 80, 0.35);
 }
 
-.igreident-summary {
+.ingredient-summary {
     display: flex;
     gap: 1rem;
     font-size: 0.9rem;
@@ -272,16 +272,31 @@ body {
         font-size: 0.85rem;
     }
 
-    .ingredient-summary .ok,
-    .ingredient-summary .missing {
+    .ingredient-summary {
         white-space: nowrap;
     }
+}
 
-    .ingredient-summary .ok::after {
-        content: "Zutaten";
-    }
+.personal-recipes {
+    padding: 1.5rem;
+    border-radius: 20px;
+    background: #fff;
+}
 
-    .ingredient-summary .missing {
-        display: none;
-    }
+.recipe-placeholder {
+    min-height: 200px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px 16px 0 0;
+    background: linear-gradient(135deg, #e8f5e9, #f5f1e7);
+    font-size: 3rem;
+}
+
+.recipe-card .ingredient-summary {
+    font-weight: 600;
+    color: var(--green-dark);
+}
+
+#modalImage[hidden] {
+    display: none !important;
 }
