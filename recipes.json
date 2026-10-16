@@ -1,0 +1,52 @@
+[
+  {
+    "id": "rl-tomaten-reis-pfanne",
+    "title": "Tomaten-Reis-Pfanne",
+    "description": "Eine einfache Pfanne für reife Tomaten und gekochten Reis.",
+    "ingredients": ["gekochter Reis", "Tomaten", "Zwiebel", "Öl", "Salz", "Pfeffer"],
+    "instructions": ["Zwiebel würfeln und in etwas Öl glasig braten.", "Tomaten würfeln, dazugeben und einige Minuten weich dünsten.", "Reis unterheben, erhitzen und mit Salz und Pfeffer abschmecken."],
+    "readyInMinutes": 20,
+    "servings": 2,
+    "source": "Restlos lecker"
+  },
+  {
+    "id": "rl-kartoffel-omelett",
+    "title": "Kartoffel-Omelett",
+    "description": "Sättigendes Omelett mit Kartoffeln und Ei.",
+    "ingredients": ["Kartoffeln", "Ei", "Zwiebel", "Öl", "Salz", "Pfeffer"],
+    "instructions": ["Kartoffeln in kleine Würfel schneiden und in Salzwasser garen.", "Zwiebel würfeln und in einer Pfanne mit Öl anbraten.", "Kartoffeln dazugeben. Eier verquirlen, würzen und darüber gießen.", "Bei kleiner Hitze stocken lassen und warm servieren."],
+    "readyInMinutes": 30,
+    "servings": 2,
+    "source": "Restlos lecker"
+  },
+  {
+    "id": "rl-brot-crouton-salat",
+    "title": "Brot-Crouton-Salat",
+    "description": "Knuspriges Brot trifft auf frisches Gemüse.",
+    "ingredients": ["Brot", "Salat", "Tomaten", "Gurke", "Öl", "Salz"],
+    "instructions": ["Brot würfeln und in einer Pfanne mit wenig Öl knusprig rösten.", "Salat, Tomaten und Gurke klein schneiden.", "Alles mischen, mit etwas Öl und Salz würzen und die Croutons darüber geben."],
+    "readyInMinutes": 15,
+    "servings": 2,
+    "source": "Restlos lecker"
+  },
+  {
+    "id": "rl-linsen-tomaten-topf",
+    "title": "Linsen-Tomaten-Topf",
+    "description": "Ein unkomplizierter Topf mit Linsen, Tomaten und Zwiebeln.",
+    "ingredients": ["Linsen", "Tomaten", "Zwiebel", "Knoblauch", "Öl", "Salz", "Pfeffer"],
+    "instructions": ["Zwiebel und Knoblauch fein würfeln und in etwas Öl anschwitzen.", "Linsen und gewürfelte Tomaten dazugeben.", "Mit Wasser bedecken und köcheln, bis die Linsen weich sind. Bei Bedarf Wasser nachgießen.", "Mit Salz und Pfeffer abschmecken."],
+    "readyInMinutes": 35,
+    "servings": 3,
+    "source": "Restlos lecker"
+  },
+  {
+    "id": "rl-bananen-pfannkuchen",
+    "title": "Bananen-Pfannkuchen",
+    "description": "Süße Pfannkuchen mit reifer Banane.",
+    "ingredients": ["Banane", "Ei", "Mehl", "Milch", "Butter"],
+    "instructions": ["Banane zerdrücken und mit Ei, Mehl und Milch zu einem glatten Teig verrühren.", "Etwas Butter in einer Pfanne erhitzen.", "Kleine Pfannkuchen portionsweise bei mittlerer Hitze von beiden Seiten goldbraun backen."],
+    "readyInMinutes": 20,
+    "servings": 2,
+    "source": "Restlos lecker"
+  }
+]
