@@ -321,8 +321,24 @@ function displayRecipes(recipes, selected) {
     searchStatus.textContent = "Keine passenden Rezepte gefunden. Probiere weitere Zutaten oder hebe den Zeitfilter auf.";
     return;
   }
-  recipes.forEach((recipe) => recipeResults.append(makeRecipeCard(recipe, selected)));
-  searchStatus.textContent = `${recipes.length} passende Rezepte – aus deiner Sammlung und der Rezept-API.`;
+
+  const rankedRecipes = [...recipes].sort((a, b) => {
+    const matchA = getMatch(a, selected);
+    const matchB = getMatch(b, selected);
+    const coverageA = matchA.used / Math.max(1, matchA.total);
+    const coverageB = matchB.used / Math.max(1, matchB.total);
+    const timeA = Number(a.readyInMinutes) || Number.POSITIVE_INFINITY;
+    const timeB = Number(b.readyInMinutes) || Number.POSITIVE_INFINITY;
+
+    return matchB.used - matchA.used
+      || matchA.missing.length - matchB.missing.length
+      || coverageB - coverageA
+      || timeA - timeB
+      || (a.title || "").localeCompare(b.title || "", "de-DE");
+  });
+
+  rankedRecipes.forEach((recipe) => recipeResults.append(makeRecipeCard(recipe, selected)));
+  searchStatus.textContent = `${rankedRecipes.length} passende Rezepte – zuerst mit den meisten deiner Zutaten, bei Gleichstand mit den wenigsten fehlenden.`;
 }
 
 async function searchRecipes() {
