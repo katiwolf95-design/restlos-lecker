@@ -1,4 +1,5 @@
 const SPOONACULAR_BASE = "https://api.spoonacular.com/recipes";
+const { translateSearchRecipes, translateRecipeDetails } = require("../lib/deepl");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
@@ -20,7 +21,7 @@ module.exports = async function handler(req, res) {
     if (!/^\d{1,12}$/.test(recipeId)) {
       return res.status(400).json({ error: "Ungültige Rezept-ID." });
     }
-    return proxyRequest(`/${recipeId}/information`, new URLSearchParams(), apiKey, res);
+    return proxyRequest(`/${recipeId}/information`, new URLSearchParams(), apiKey, res, translateRecipeDetails);
   }
 
   const rawIngredients = Array.isArray(ingredients) ? ingredients.join(",") : (ingredients || "");
@@ -46,10 +47,10 @@ module.exports = async function handler(req, res) {
     params.set("maxReadyTime", String(Math.min(600, Math.floor(time))));
   }
 
-  return proxyRequest("/findByIngredients", params, apiKey, res);
+  return proxyRequest("/findByIngredients", params, apiKey, res, translateSearchRecipes);
 };
 
-async function proxyRequest(path, params, apiKey, res) {
+async function proxyRequest(path, params, apiKey, res, transform) {
   try {
     const query = params.toString();
     const url = `${SPOONACULAR_BASE}${path}${query ? `?${query}` : ""}`;
@@ -68,7 +69,8 @@ async function proxyRequest(path, params, apiKey, res) {
         ? "Die Rezeptsuche ist gerade ausgelastet. Bitte versuche es später erneut."
         : "Die Rezeptquelle ist momentan nicht erreichbar." });
     }
-    return res.status(200).json(data);
+    const output = transform ? await transform(data) : data;
+    return res.status(200).json(output);
   } catch (error) {
     return res.status(502).json({ error: "Die Rezeptquelle ist momentan nicht erreichbar." });
   }

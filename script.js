@@ -14,6 +14,8 @@ const modalTitle = document.getElementById("modalTitle");
 const modalImage = document.getElementById("modalImage");
 const modalIngredients = document.getElementById("modalIngredients");
 const modalInstructions = document.getElementById("modalInstructions");
+const translationNotice = document.getElementById("translationNotice");
+const recipeSource = document.getElementById("recipeSource");
 
 const FAVORITES_KEY = "favorites";
 const PERSONAL_RECIPES_KEY = "restlosLeckerPersonalRecipes";
@@ -221,6 +223,15 @@ function safeImageUrl(value) {
   }
 }
 
+function safeWebUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
 function makeRecipeCard(recipe, selected = [], { personal = false, showMatch = true } = {}) {
   const column = document.createElement("div");
   column.className = "col";
@@ -267,7 +278,10 @@ function makeRecipeCard(recipe, selected = [], { personal = false, showMatch = t
   const meta = document.createElement("p");
   meta.className = "small text-muted mt-auto";
   const minutes = Number(recipe.readyInMinutes);
-  meta.textContent = [recipe.source || "Rezept", minutes > 0 ? `${minutes} Min.` : "", recipe.servings ? `${recipe.servings} Portionen` : ""].filter(Boolean).join(" · ");
+  const source = recipe.sourceType === "spoonacular"
+    ? (recipe.translationStatus === "translated" ? "Spoonacular · Deutsch" : "Spoonacular · Originalsprache")
+    : (recipe.source || "Rezept");
+  meta.textContent = [source, minutes > 0 ? `${minutes} Min.` : "", recipe.servings ? `${recipe.servings} Portionen` : ""].filter(Boolean).join(" · ");
   body.append(meta);
 
   const actions = document.createElement("div");
@@ -346,7 +360,7 @@ async function searchRecipes() {
     const response = await fetch(`/api/recipes?${params.toString()}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Die externe Rezeptsuche ist gerade nicht verfügbar.");
-    externalMatches = Array.isArray(data) ? data.map((recipe) => ({ ...recipe, source: "Rezept-API · Originalsprache", sourceType: "spoonacular" })) : [];
+    externalMatches = Array.isArray(data) ? data.map((recipe) => ({ ...recipe, sourceType: "spoonacular" })) : [];
   } catch (error) {
     console.warn(error);
     externalFailure = error.message;
@@ -361,6 +375,11 @@ async function searchRecipes() {
     displayRecipes([...ownMatches, ...uniqueExternal], selected);
     if (externalFailure) {
       searchStatus.textContent = `${externalFailure} ${ownMatches.length ? "Deine eigene Sammlung wird trotzdem angezeigt." : "Prüfe die API-Konfiguration."}`;
+    } else if (externalMatches.some((recipe) => recipe.translationStatus !== "translated")) {
+      const missingKey = externalMatches.some((recipe) => recipe.translationStatus === "missing-key");
+      searchStatus.textContent = missingKey
+        ? `${externalMatches.length} Spoonacular-Rezepte gefunden. Sie werden in der Originalsprache angezeigt; für deutsche Texte fehlt noch DEEPL_API_KEY in Vercel.`
+        : `${externalMatches.length} Spoonacular-Rezepte gefunden. Die Übersetzung ist gerade nicht verfügbar; die Originaltexte werden angezeigt.`;
     } else if (!externalMatches.length && ownMatches.length) {
       searchStatus.textContent = `${ownMatches.length} passende Rezepte aus deiner Sammlung. Die externe Quelle lieferte keine Treffer.`;
     } else if (!externalMatches.length && !ownMatches.length) {
@@ -421,6 +440,10 @@ async function showRecipeDetails(recipe) {
   modalImage.removeAttribute("src");
   modalIngredients.replaceChildren();
   modalInstructions.replaceChildren();
+  translationNotice.hidden = true;
+  translationNotice.textContent = "";
+  recipeSource.hidden = true;
+  recipeSource.replaceChildren();
   const knownIngredients = ingredientNames(recipe);
   knownIngredients.forEach((item) => {
     const li = document.createElement("li");
@@ -446,10 +469,35 @@ async function showRecipeDetails(recipe) {
   recipeModal.show();
 
   if (recipe.sourceType !== "spoonacular") return;
+  translationNotice.hidden = false;
+  translationNotice.textContent = "Deutsche Übersetzung wird geladen …";
   try {
     const response = await fetch(`/api/recipes?id=${encodeURIComponent(recipe.id)}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Details nicht verfügbar.");
+    modalTitle.textContent = data.title || recipe.title || "Rezeptdetails";
+    translationNotice.textContent = data.translationStatus === "translated"
+      ? "Automatisch aus dem Englischen übersetzt."
+      : data.translationStatus === "missing-key"
+        ? "Originalsprache – für deutsche Texte fehlt noch DEEPL_API_KEY in Vercel."
+        : "Originalsprache – die Übersetzung ist gerade nicht verfügbar.";
+    const sourceName = data.creditsText || data.sourceName;
+    const sourceUrl = safeWebUrl(data.sourceUrl) || safeWebUrl(data.spoonacularSourceUrl);
+    if (sourceName || sourceUrl || data.license) {
+      recipeSource.hidden = false;
+      recipeSource.append(document.createTextNode("Quelle: "));
+      if (sourceUrl) {
+        const link = document.createElement("a");
+        link.href = sourceUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = sourceName || "Rezeptquelle";
+        recipeSource.append(link);
+      } else {
+        recipeSource.append(document.createTextNode(sourceName || "Spoonacular"));
+      }
+      if (data.license) recipeSource.append(document.createTextNode(` · Lizenz: ${data.license}`));
+    }
     modalIngredients.replaceChildren();
     (data.extendedIngredients || []).forEach((item) => {
       const li = document.createElement("li");
@@ -457,8 +505,20 @@ async function showRecipeDetails(recipe) {
       modalIngredients.append(li);
     });
     modalInstructions.replaceChildren();
-    if (data.instructions) appendSafeMarkup(modalInstructions, data.instructions);
-    else modalInstructions.textContent = "Für dieses Rezept ist keine Zubereitung verfügbar.";
+    if (data.instructions) {
+      appendSafeMarkup(modalInstructions, data.instructions);
+    } else {
+      const steps = (data.analyzedInstructions || []).flatMap((section) => section.steps || []);
+      if (steps.length) {
+        steps.forEach((step) => {
+          const p = document.createElement("p");
+          p.textContent = step.step || "";
+          modalInstructions.append(p);
+        });
+      } else {
+        modalInstructions.textContent = "Für dieses Rezept ist keine Zubereitung verfügbar.";
+      }
+    }
   } catch (error) {
     modalInstructions.textContent = error.message;
   }
